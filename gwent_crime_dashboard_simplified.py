@@ -155,7 +155,7 @@ with colB:
 colC, colD = st.columns(2)
 with colC:
     if "lsoa_name" in df.columns:
-        st.subheader("Top LSOAs")
+        st.subheader("Top Crime Locations")
         top_lsoa = df["lsoa_name"].value_counts().head(25).reset_index()
         top_lsoa.columns = ["lsoa_name", "count"]
         bar = alt.Chart(top_lsoa).mark_bar().encode(
@@ -168,7 +168,7 @@ with colC:
 
 with colD:
     if {"latitude", "longitude"}.issubset(df.columns):
-        st.subheader("Crime Map (sample up to 5,000 points)")
+        st.subheader("Crime Map (sample upto 5,000 pts)")
         map_df = df[["latitude", "longitude"]].dropna().sample(min(5000, len(df)), random_state=42)
         st.map(map_df.rename(columns={"latitude":"lat", "longitude":"lon"}))
 
