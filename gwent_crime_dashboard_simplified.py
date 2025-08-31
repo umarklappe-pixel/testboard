@@ -33,6 +33,7 @@ st.caption("EDA • Predictive Modeling • AI and ML")
 # -------------------------
 # Helper functions
 # -------------------------
+
 @st.cache_data(show_spinner=False)
 def load_csv(file: t.Union[str, io.BytesIO]) -> pd.DataFrame:
     df = pd.read_csv(file)
