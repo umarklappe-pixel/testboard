@@ -156,7 +156,7 @@ colC, colD = st.columns(2)
 with colC:
     if "lsoa_name" in df.columns:
         st.subheader("Top Crime Locations")
-        top_lsoa = df["lsoa_name"].value_counts().head(25).reset_index()
+        top_lsoa = df["lsoa_name"].value_counts().head(20).reset_index()
         top_lsoa.columns = ["lsoa_name", "count"]
         bar = alt.Chart(top_lsoa).mark_bar().encode(
             x=alt.X("count:Q", title="Count"),
@@ -164,7 +164,6 @@ with colC:
             tooltip=["lsoa_name", "count"]
         )
         st.altair_chart(bar, use_container_width=True)
-
 
 with colD:
     if {"latitude", "longitude"}.issubset(df.columns):
@@ -207,11 +206,9 @@ else:
 # -------------------------
 # Predictive Modeling
 # -------------------------
+
 st.header("Predictive Model")
 
-# -------------------------
-# Extra EDA — Trend of Top 6 Crime Types
-# -------------------------
 if "year_month" in df.columns and "crime_type" in df.columns:
     st.subheader("History Data (Trends — Top 6 Crime Types)")
 
