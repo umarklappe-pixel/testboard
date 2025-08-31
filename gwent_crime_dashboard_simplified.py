@@ -21,8 +21,8 @@ from sklearn.ensemble import RandomForestClassifier
 # Page config
 # -------------------------
 st.set_page_config(
-    page_title="Gwent Police — Predictive Analytics Dashboard",
-    page_icon="🚓",
+    page_title="EDA — Predictive Analytics Dashboard",
+    page_icon="",
     layout="wide"
 )
 
@@ -73,7 +73,7 @@ def make_confusion_df(y_true, y_pred, labels) -> pd.DataFrame:
 # -------------------------
 # Sidebar — Data input
 # -------------------------
-st.sidebar.header("📥 Data")
+st.sidebar.header("Gwent police")
 uploaded_file = st.sidebar.file_uploader("Upload CSV", type=["csv"], help="Police.UK street-level CSV")
 
 # Optional sample path
