@@ -152,7 +152,7 @@ colC, colD = st.columns(2)
 with colC:
     if "lsoa_name" in df.columns:
         st.subheader("Top LSOAs")
-        top_lsoa = df["lsoa_name"].value_counts().head(10).reset_index()
+        top_lsoa = df["lsoa_name"].value_counts().head(25).reset_index()
         top_lsoa.columns = ["lsoa_name", "count"]
         bar = alt.Chart(top_lsoa).mark_bar().encode(
             x=alt.X("count:Q", title="Count"),
@@ -162,12 +162,41 @@ with colC:
         st.altair_chart(bar, use_container_width=True)
 
 
-
 with colD:
     if {"latitude", "longitude"}.issubset(df.columns):
         st.subheader("Crime Map (sample up to 5,000 points)")
         map_df = df[["latitude", "longitude"]].dropna().sample(min(5000, len(df)), random_state=42)
         st.map(map_df.rename(columns={"latitude":"lat", "longitude":"lon"}))
+
+# -------------------------
+# Extra EDA — Trend of Top 6 Crime Types
+# -------------------------
+if "year_month" in df.columns and "crime_type" in df.columns:
+    st.subheader("📈 Trend by Month (Top 6 Crime Types)")
+
+    # Aggregate monthly counts by crime type
+    ts = (
+        df.groupby(["year_month", "crime_type"])
+          .size()
+          .reset_index(name="count")
+    )
+    ts["year_month"] = pd.to_datetime(ts["year_month"], errors="coerce")
+
+    # Pick top 6 crime types overall
+    top6_types = df["crime_type"].value_counts().head(6).index
+    ts_top6 = ts[ts["crime_type"].isin(top6_types)]
+
+    # Multi-line chart
+    line = alt.Chart(ts_top6).mark_line(point=True).encode(
+        x=alt.X("year_month:T", title="Month"),
+        y=alt.Y("count:Q", title="Crimes"),
+        color=alt.Color("crime_type:N", title="Crime Type"),
+        tooltip=["year_month:T", "crime_type", "count:Q"]
+    ).properties(height=400)
+
+    st.altair_chart(line, use_container_width=True)
+else:
+    st.info("Columns 'year_month' and 'crime_type' are required for this chart.")
 
 
 st.subheader("🔥 Heatmap — Top 10 Crime Types by Month")
