@@ -108,27 +108,28 @@ with colA:
         st.altair_chart(chart, use_container_width=True)
 
 with colB:
-    if "year_month" in df.columns:
-        st.subheader("Trend by Month")
-        ts = df.groupby("year_month").size().reset_index(name="count")
+    if "year_month" in df.columns and "crime_type" in df.columns:
+        st.subheader("Trend by Month (Top 6 Crime Types)")
+
+        # Aggregate
+        ts = df.groupby(["year_month", "crime_type"]).size().reset_index(name="count")
         ts["year_month"] = pd.to_datetime(ts["year_month"])
 
-        line = alt.Chart(ts).mark_line(point=True).encode(
+        # Pick top 6 crime types overall
+        top6_types = df["crime_type"].value_counts().head(6).index
+        ts_top6 = ts[ts["crime_type"].isin(top6_types)]
+
+        # Multi-line chart
+        line = alt.Chart(ts_top6).mark_line(point=True).encode(
             x=alt.X("year_month:T", title="Month"),
             y=alt.Y("count:Q", title="Crimes"),
-            tooltip=["year_month:T", "count:Q"]
+            color=alt.Color("crime_type:N", title="Crime Type"),
+            tooltip=["year_month:T", "crime_type", "count:Q"]
         )
         st.altair_chart(line, use_container_width=True)
+    else:
+        st.info("Columns 'year_month' and 'crime_type' are required for this chart.")
 
-        # Top 6 highest-crime months
-        top6 = ts.sort_values("count", ascending=False).head(6)
-        bar_top6 = alt.Chart(top6).mark_bar().encode(
-            x=alt.X("year_month:T", title="Month"),
-            y=alt.Y("count:Q", title="Crimes"),
-            tooltip=["year_month:T", "count:Q"]
-        )
-        st.subheader("Top 6 Crime Months")
-        st.altair_chart(bar_top6, use_container_width=True)
 
 colC, colD = st.columns(2)
 with colC:
