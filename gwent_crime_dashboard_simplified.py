@@ -118,11 +118,6 @@ col1.metric("Total Crimes", f"{total_crimes:,}")
 col2.metric("Total Months", f"{total_months}")
 col3.metric("Incomplete Rows", f"{incomplete_count:,}")
 
-# Optionally preview some incomplete rows
-with st.expander("🔎 View Sample of Incomplete Rows"):
-    st.dataframe(incomplete_rows.head(20))
-
-
 # -------------------------
 # EDA (always full data)
 # -------------------------
