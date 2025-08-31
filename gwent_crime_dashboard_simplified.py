@@ -20,6 +20,7 @@ from sklearn.ensemble import RandomForestClassifier
 # -------------------------
 # Page config
 # -------------------------
+
 st.set_page_config(
     page_title="Gwent Police — Analytics Dashboard",
     page_icon="",
@@ -69,28 +70,6 @@ def pick_top_categories(series: pd.Series, top_n: int = 30) -> pd.Series:
 def make_confusion_df(y_true, y_pred, labels) -> pd.DataFrame:
     cm = confusion_matrix(y_true, y_pred, labels=labels)
     return pd.DataFrame(cm, index=pd.Index(labels, name="True"), columns=pd.Index(labels, name="Pred"))
-
-# -------------------------
-# Sidebar — Data input
-# -------------------------
-st.sidebar.header("Gwent police")
-uploaded_file = st.sidebar.file_uploader("Upload CSV", type=["csv"], help="Police.UK street-level CSV")
-
-# Optional sample path
-default_path = "example.csv"
-use_sample = st.sidebar.toggle("Use example file name in current folder", value=False)
-
-df = None
-if uploaded_file is not None:
-    df = load_csv(uploaded_file)
-elif use_sample and os.path.exists(default_path):
-    df = load_csv(default_path)
-else:
-    st.info("Upload a CSV in the sidebar to begin.")
-    st.stop()
-
-st.success(f"Loaded {len(df):,} rows • {df.shape[1]} columns")
-
 # -------------------------
 # Dataset Stats
 # -------------------------
@@ -117,6 +96,31 @@ col1, col2, col3 = st.columns(3)
 col1.metric("Total Crimes", f"{total_crimes:,}")
 col2.metric("Total Months", f"{total_months}")
 col3.metric("Incomplete Rows", f"{incomplete_count:,}")
+
+
+
+
+# -------------------------
+# Sidebar — Data input
+# -------------------------
+
+st.sidebar.header("Gwent police")
+uploaded_file = st.sidebar.file_uploader("Upload CSV", type=["csv"], help="Police.UK street-level CSV")
+
+# Optional sample path
+default_path = "example.csv"
+use_sample = st.sidebar.toggle("Use example file name in current folder", value=False)
+
+df = None
+if uploaded_file is not None:
+    df = load_csv(uploaded_file)
+elif use_sample and os.path.exists(default_path):
+    df = load_csv(default_path)
+else:
+    st.info("Upload a CSV in the sidebar to begin.")
+    st.stop()
+
+st.success(f"Loaded {len(df):,} rows • {df.shape[1]} columns")
 
 # -------------------------
 # EDA (always full data)
