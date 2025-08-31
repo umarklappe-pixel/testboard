@@ -213,7 +213,7 @@ st.header("Predictive Model")
 # Extra EDA — Trend of Top 6 Crime Types
 # -------------------------
 if "year_month" in df.columns and "crime_type" in df.columns:
-    st.subheader("Trend by Month (History Data — Top 6 Crime Types)")
+    st.subheader("History Data (Trends — Top 6 Crime Types)")
 
     # Aggregate monthly counts by crime type
     ts = (
