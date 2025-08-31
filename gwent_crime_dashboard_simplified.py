@@ -13,7 +13,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
-from datetime import timedelta
 
 # -------------------------
 # Page config
@@ -113,6 +112,7 @@ with colB:
         st.subheader("Trend by Month")
         ts = df.groupby("year_month").size().reset_index(name="count")
         ts["year_month"] = pd.to_datetime(ts["year_month"])
+
         line = alt.Chart(ts).mark_line(point=True).encode(
             x=alt.X("year_month:T", title="Month"),
             y=alt.Y("count:Q", title="Crimes"),
@@ -120,18 +120,28 @@ with colB:
         )
         st.altair_chart(line, use_container_width=True)
 
+        # Top 6 highest-crime months
+        top6 = ts.sort_values("count", ascending=False).head(6)
+        bar_top6 = alt.Chart(top6).mark_bar().encode(
+            x=alt.X("year_month:T", title="Month"),
+            y=alt.Y("count:Q", title="Crimes"),
+            tooltip=["year_month:T", "count:Q"]
+        )
+        st.subheader("Top 6 Crime Months")
+        st.altair_chart(bar_top6, use_container_width=True)
+
 colC, colD = st.columns(2)
 with colC:
-    if "lsoa_name" in df.columns:
-        st.subheader("Top LSOAs")
-        top_lsoa = df["lsoa_name"].value_counts().head(20).reset_index()
-        top_lsoa.columns = ["lsoa_name", "count"]
-        bar = alt.Chart(top_lsoa).mark_bar().encode(
-            x=alt.X("count:Q", title="Count"),
+    if {"year_month", "lsoa_name"}.issubset(df.columns):
+        st.subheader("LSOA Month-on-Month Heatmap")
+        lsoa_month = df.groupby(["lsoa_name", "year_month"]).size().reset_index(name="count")
+        heatmap = alt.Chart(lsoa_month).mark_rect().encode(
+            x=alt.X("year_month:N", title="Month"),
             y=alt.Y("lsoa_name:N", sort="-x", title="LSOA"),
-            tooltip=["lsoa_name", "count"]
+            color=alt.Color("count:Q", title="Crimes"),
+            tooltip=["lsoa_name", "year_month", "count"]
         )
-        st.altair_chart(bar, use_container_width=True)
+        st.altair_chart(heatmap, use_container_width=True)
 
 with colD:
     if {"latitude", "longitude"}.issubset(df.columns):
@@ -140,13 +150,13 @@ with colD:
         st.map(map_df.rename(columns={"latitude":"lat", "longitude":"lon"}))
 
 # -------------------------
-# Predictive Modeling
+# Predictive Modeling (Last 6 months, Random Forest only)
 # -------------------------
 st.header("🤖 Predictive Model")
 
 possible_targets = [c for c in ["crime_type", "last_outcome_category"] if c in df.columns]
 if not possible_targets:
-    st.warning("No suitable target column found (expected 'crime_type' or 'last_outcome_category').")
+    st.warning("No suitable target column found.")
     st.stop()
 
 target_col = possible_targets[0]
