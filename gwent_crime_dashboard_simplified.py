@@ -21,12 +21,12 @@ from sklearn.ensemble import RandomForestClassifier
 # Page config
 # -------------------------
 st.set_page_config(
-    page_title="EDA — Predictive Analytics Dashboard",
+    page_title="Gwent Police — Analytics Dashboard",
     page_icon="",
     layout="wide"
 )
 
-st.title("Gwent Police — Analytics Dashboard")
+st.title("EDA — Predictive Analytics Dashboard")
 st.caption("EDA • Predictive Modeling • AI and ML")
 
 # -------------------------
