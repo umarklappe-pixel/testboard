@@ -111,9 +111,9 @@ with colB:
     if {"month", "crime_type"}.issubset(df.columns):
         st.subheader("Heatmap — Top 10 Crime Types by Month")
 
-        # Ensure month column is datetime
+        # Ensure datetime and extract year-month
         df["month"] = pd.to_datetime(df["month"], errors="coerce")
-        df["year_month"] = df["month"].dt.to_period("M").dt.to_timestamp()
+        df["year_month"] = df["month"].dt.to_period("M").astype(str)
 
         # Aggregate counts
         crime_month = (
@@ -122,21 +122,22 @@ with colB:
               .reset_index(name="count")
         )
 
-        # Select top 10 crimes overall
+        # Restrict to top 10 crime types overall
         top10_types = df["crime_type"].value_counts().head(10).index
         crime_month = crime_month[crime_month["crime_type"].isin(top10_types)]
 
-        # Heatmap (month vs crime type)
+        # Heatmap
         heatmap = alt.Chart(crime_month).mark_rect().encode(
-            x=alt.X("year_month:T", title="Month", sort="x"),
+            x=alt.X("year_month:N", title="Month", sort=sorted(crime_month["year_month"].unique())),
             y=alt.Y("crime_type:N", title="Crime Type"),
             color=alt.Color("count:Q", title="Crimes", scale=alt.Scale(scheme="reds")),
-            tooltip=["crime_type", "year_month:T", "count:Q"]
+            tooltip=["crime_type", "year_month", "count:Q"]
         )
 
         st.altair_chart(heatmap, use_container_width=True)
     else:
         st.info("Columns 'month' and 'crime_type' are required for this chart.")
+
 
 colC, colD = st.columns(2)
 with colC:
