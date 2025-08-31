@@ -14,7 +14,6 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 
 # -------------------------
@@ -33,7 +32,6 @@ st.caption("EDA • Predictive Modeling • AI and ML")
 # -------------------------
 # Helper functions
 # -------------------------
-
 @st.cache_data(show_spinner=False)
 def load_csv(file: t.Union[str, io.BytesIO]) -> pd.DataFrame:
     df = pd.read_csv(file)
@@ -125,9 +123,6 @@ col3.metric("Incomplete Rows", f"{incomplete_count:,}")
 # -------------------------
 # EDA (always full data)
 # -------------------------
-_st_themes = {
-    "mark_bar": {"tooltip": True},
-}
 
 st.header("Exploratory Data Analysis (EDA)")
 
@@ -148,7 +143,6 @@ with colB:
     if "year_month" in df.columns:
         st.subheader("Trend by Month")
         ts = df.groupby("year_month").size().reset_index(name="count")
-        # Sort by actual time
         ts["year_month"] = pd.to_datetime(ts["year_month"], errors="coerce")
         ts = ts.sort_values("year_month")
         line = alt.Chart(ts).mark_line(point=True).encode(
@@ -175,7 +169,6 @@ with colD:
     if {"latitude", "longitude"}.issubset(df.columns):
         st.subheader("Crime Map (sample up to 5,000 pts)")
         map_df = df[["latitude", "longitude"]].dropna()
-        # FIX: sample from the cleaned map_df, not the full df
         n = min(5000, len(map_df))
         if n > 0:
             map_df = map_df.sample(n, random_state=42)
@@ -186,25 +179,20 @@ with colD:
 st.subheader("Heatmap — Top 10 Crime Types by Month")
 
 if {"month", "crime_type"}.issubset(df.columns):
-    # Ensure datetime and extract year-month properly
     df["month"] = pd.to_datetime(df["month"], errors="coerce")
     df["year_month"] = df["month"].dt.to_period("M").astype(str)
 
-    # Aggregate counts
     crime_month = (
         df.groupby(["crime_type", "year_month"])
           .size()
           .reset_index(name="count")
     )
 
-    # Keep only top 10 crime types overall
     top10_types = df["crime_type"].value_counts().head(10).index
     crime_month = crime_month[crime_month["crime_type"].isin(top10_types)]
 
-    # Ensure months are sorted chronologically for the x-axis
     month_order = sorted(crime_month["year_month"].unique(), key=lambda x: pd.to_datetime(x))
 
-    # Heatmap
     heatmap = alt.Chart(crime_month).mark_rect().encode(
         x=alt.X("year_month:N", title="Month", sort=month_order),
         y=alt.Y("crime_type:N", title="Crime Type"),
@@ -220,12 +208,11 @@ else:
 # Predictive Modeling
 # -------------------------
 
-st.header("Predictive Model")
+st.header("Predictive Model (Random Forest)")
 
 if "year_month" in df.columns and "crime_type" in df.columns:
     st.subheader("History Data (Trends — Top 6 Crime Types)")
 
-    # Aggregate monthly counts by crime type
     ts = (
         df.groupby(["year_month", "crime_type"])\
           .size()\
@@ -233,11 +220,9 @@ if "year_month" in df.columns and "crime_type" in df.columns:
     )
     ts["year_month"] = pd.to_datetime(ts["year_month"], errors="coerce")
 
-    # Pick top 6 crime types overall
     top6_types = df["crime_type"].value_counts().head(6).index
     ts_top6 = ts[ts["crime_type"].isin(top6_types)]
 
-    # Multi-line chart
     line = alt.Chart(ts_top6).mark_line(point=True).encode(
         x=alt.X("year_month:T", title="Month"),
         y=alt.Y("count:Q", title="Crimes"),
@@ -249,15 +234,11 @@ if "year_month" in df.columns and "crime_type" in df.columns:
 else:
     st.info("Columns 'year_month' and 'crime_type' are required for this chart.")
 
-
-# Month selection for training
 if "year_month" not in df.columns:
     st.warning("No 'year_month' column available for training restriction.")
     st.stop()
 
-# Sort month options chronologically
 all_months = sorted(df["year_month"].unique(), key=lambda x: pd.to_datetime(x, errors="coerce"))
-# Default to last 6 months if available
 default_months = all_months[-6:] if len(all_months) >= 6 else all_months
 
 selected_months = st.multiselect("Select up to 6 months for training", options=all_months, default=default_months)
@@ -265,7 +246,6 @@ if len(selected_months) > 6:
     st.error("Please select a maximum of 6 months.")
     st.stop()
 
-# Target selection
 possible_targets = [c for c in ["crime_type", "last_outcome_category"] if c in df.columns]
 if not possible_targets:
     st.warning("No suitable target column found.")
@@ -282,13 +262,9 @@ if not selected_features:
     st.warning("Select at least one feature to train the model.")
     st.stop()
 
-model_choice = st.selectbox("Model", ["Logistic Regression", "Random Forest"], index=1)
-
-# Button to start training
-if st.button("Start Training"):
+if st.button("Start Training with Random Forest"):
     model_df = df[df["year_month"].isin(selected_months)].dropna(subset=[target_col]).copy()
 
-    # Handle missing values in features
     for col in selected_features:
         if model_df[col].dtype == "object":
             model_df[col] = model_df[col].fillna("Unknown")
@@ -299,7 +275,6 @@ if st.button("Start Training"):
     X = model_df[selected_features].copy()
     y = model_df[target_col].astype(str)
 
-    # Guard against stratify errors when some classes are too small for the split
     vc = y.value_counts()
     can_stratify = (vc.min() >= 2) and ((vc * 0.2).astype(int).ge(1).all())
 
@@ -315,20 +290,14 @@ if st.button("Start Training"):
     if len(cat_cols) > 0:
         transformers.append(("cat", OneHotEncoder(handle_unknown="ignore"), cat_cols))
     if len(num_cols) > 0:
-        # with_mean=False to preserve sparsity if combined with OHE output
         transformers.append(("num", StandardScaler(with_mean=False), num_cols))
 
     preprocess = ColumnTransformer(transformers)
 
-    if model_choice == "Logistic Regression":
-        # FIX: use a solver that supports sparse input (saga) and raise max_iter
-        clf = LogisticRegression(solver="saga", penalty="l2", max_iter=3000, n_jobs=-1)
-    else:
-        clf = RandomForestClassifier(n_estimators=300, random_state=42, n_jobs=-1)
-
+    clf = RandomForestClassifier(n_estimators=300, random_state=42, n_jobs=-1)
     pipe = Pipeline(steps=[("prep", preprocess), ("model", clf)])
 
-    with st.spinner("Training model..."):
+    with st.spinner("Training Random Forest model..."):
         pipe.fit(X_train, y_train)
 
     y_pred = pipe.predict(X_test)
