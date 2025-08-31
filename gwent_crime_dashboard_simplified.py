@@ -92,6 +92,32 @@ else:
 st.success(f"Loaded {len(df):,} rows • {df.shape[1]} columns")
 
 # -------------------------
+# Dataset Stats
+# -------------------------
+st.subheader("📊 Data Stats")
+
+# Total crimes = total rows
+total_crimes = len(df)
+
+# Total months (if available)
+total_months = df["year_month"].nunique() if "year_month" in df.columns else "N/A"
+
+# Missing values (NaN) count
+nan_count = df.isna().sum().sum()
+
+# Empty string count
+empty_count = (df.astype(str).applymap(lambda x: x.strip() == "")).sum().sum()
+
+# Show stats nicely
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Total Crimes", f"{total_crimes:,}")
+col2.metric("Total Months", f"{total_months}")
+col3.metric("Missing (NaN)", f"{nan_count:,}")
+col4.metric("Empty Fields", f"{empty_count:,}")
+
+
+
+# -------------------------
 # EDA (always full data)
 # -------------------------
 st.header("📊 Exploratory Data Analysis (EDA)")
