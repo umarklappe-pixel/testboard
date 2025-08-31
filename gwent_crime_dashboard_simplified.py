@@ -102,7 +102,7 @@ total_crimes = len(df)
 # Total months (if available)
 total_months = df["year_month"].nunique() if "year_month" in df.columns else "N/A"
 
- Drop 'context' column from missing check if it exists
+# Drop 'context' column from missing check if it exists
 df_check = df.drop(columns=["context"], errors="ignore")
 
 # Find rows with NaN or empty values (excluding 'context')
@@ -112,16 +112,15 @@ incomplete_rows = df_check[
 
 incomplete_count = len(incomplete_rows)
 
-# Empty string count
-empty_count = (df.astype(str).applymap(lambda x: x.strip() == "")).sum().sum()
-
-# Show stats nicely
-col1, col2, col3, col4 = st.columns(4)
+# Show summary stats
+col1, col2, col3 = st.columns(3)
 col1.metric("Total Crimes", f"{total_crimes:,}")
 col2.metric("Total Months", f"{total_months}")
-col3.metric("Missing (NaN)", f"{incomplete_count:,}")
-col4.metric("Empty Fields", f"{empty_count:,}")
+col3.metric("Incomplete Rows", f"{incomplete_count:,}")
 
+# Optionally preview some incomplete rows
+with st.expander("🔎 View Sample of Incomplete Rows"):
+    st.dataframe(incomplete_rows.head(20))
 
 
 # -------------------------
