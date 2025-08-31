@@ -102,8 +102,15 @@ total_crimes = len(df)
 # Total months (if available)
 total_months = df["year_month"].nunique() if "year_month" in df.columns else "N/A"
 
-# Missing values (NaN) count
-nan_count = df.isna().sum().sum()
+ Drop 'context' column from missing check if it exists
+df_check = df.drop(columns=["context"], errors="ignore")
+
+# Find rows with NaN or empty values (excluding 'context')
+incomplete_rows = df_check[
+    df_check.isna().any(axis=1) | (df_check.astype(str).apply(lambda x: x.str.strip() == "").any(axis=1))
+]
+
+incomplete_count = len(incomplete_rows)
 
 # Empty string count
 empty_count = (df.astype(str).applymap(lambda x: x.strip() == "")).sum().sum()
@@ -112,7 +119,7 @@ empty_count = (df.astype(str).applymap(lambda x: x.strip() == "")).sum().sum()
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Crimes", f"{total_crimes:,}")
 col2.metric("Total Months", f"{total_months}")
-col3.metric("Missing (NaN)", f"{nan_count:,}")
+col3.metric("Missing (NaN)", f"{incomplete_count:,}")
 col4.metric("Empty Fields", f"{empty_count:,}")
 
 
