@@ -172,7 +172,7 @@ with colD:
 # Extra EDA — Trend of Top 6 Crime Types
 # -------------------------
 if "year_month" in df.columns and "crime_type" in df.columns:
-    st.subheader("📈 Trend by Month (Top 6 Crime Types)")
+    st.subheader("Trend by Month (Top 6 Crime Types)")
 
     # Aggregate monthly counts by crime type
     ts = (
@@ -199,7 +199,7 @@ else:
     st.info("Columns 'year_month' and 'crime_type' are required for this chart.")
 
 
-st.subheader("🔥 Heatmap — Top 10 Crime Types by Month")
+st.subheader("Heatmap — Top 10 Crime Types by Month")
 
 if {"month", "crime_type"}.issubset(df.columns):
     # Ensure datetime and extract year-month properly
@@ -233,7 +233,7 @@ else:
 # -------------------------
 # Predictive Modeling
 # -------------------------
-st.header("🤖 Predictive Model")
+st.header("Predictive Model")
 
 # Month selection for training
 if "year_month" not in df.columns:
@@ -245,7 +245,7 @@ default_months = sorted(all_months)[-6:]
 
 selected_months = st.multiselect("Select up to 6 months for training", options=all_months, default=default_months)
 if len(selected_months) > 6:
-    st.error("⚠️ Please select a maximum of 6 months.")
+    st.error("Please select a maximum of 6 months.")
     st.stop()
 
 # Target selection
@@ -268,7 +268,7 @@ if not selected_features:
 model_choice = st.selectbox("Model", ["Logistic Regression", "Random Forest"], index=1)
 
 # Button to start training
-if st.button("🚀 Start Training"):
+if st.button("Start Training"):
     model_df = df[df["year_month"].isin(selected_months)].dropna(subset=[target_col]).copy()
 
     # Handle missing values in features
@@ -320,5 +320,5 @@ if st.button("🚀 Start Training"):
     cm_chart = px.imshow(cm_df.values, x=labels, y=labels, labels=dict(x="Predicted", y="True", color="Count"))
     st.plotly_chart(cm_chart, use_container_width=True)
 
-    with st.expander("📄 Classification Report", expanded=False):
+    with st.expander("Classification Report", expanded=False):
         st.text(classification_report(y_test, y_pred, zero_division=0))
