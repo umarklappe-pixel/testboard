@@ -26,8 +26,8 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🚓 Gwent Police Crime — Predictive Analytics Dashboard")
-st.caption("EDA • Predictive Modeling • Interactive Insights")
+st.title("Descriptive — Predictive Analytics Dashboard")
+st.caption("EDA • Predictive Modeling • AI and ML")
 
 # -------------------------
 # Helper functions
@@ -77,7 +77,7 @@ st.sidebar.header("📥 Data")
 uploaded_file = st.sidebar.file_uploader("Upload CSV", type=["csv"], help="Police.UK street-level CSV")
 
 # Optional sample path
-default_path = "2022-07-gwent-street.csv"
+default_path = "example.csv"
 use_sample = st.sidebar.toggle("Use example file name in current folder", value=False)
 
 df = None
@@ -86,7 +86,7 @@ if uploaded_file is not None:
 elif use_sample and os.path.exists(default_path):
     df = load_csv(default_path)
 else:
-    st.info("👈 Upload a CSV in the sidebar to begin.")
+    st.info("Upload a CSV in the sidebar to begin.")
     st.stop()
 
 st.success(f"Loaded {len(df):,} rows • {df.shape[1]} columns")
@@ -94,7 +94,7 @@ st.success(f"Loaded {len(df):,} rows • {df.shape[1]} columns")
 # -------------------------
 # Dataset Stats
 # -------------------------
-st.subheader("📊 Data Stats")
+st.subheader("Data Stats")
 
 # Total crimes = total rows
 total_crimes = len(df)
@@ -121,7 +121,7 @@ col3.metric("Incomplete Rows", f"{incomplete_count:,}")
 # -------------------------
 # EDA (always full data)
 # -------------------------
-st.header("📊 Exploratory Data Analysis (EDA)")
+st.header("Exploratory Data Analysis (EDA)")
 
 colA, colB = st.columns(2)
 with colA:
