@@ -242,9 +242,9 @@ all_months = sorted(df["year_month"].unique(), key=lambda x: pd.to_datetime(x, e
 default_months = all_months[-6:] if len(all_months) >= 6 else all_months
 
 selected_months = st.multiselect("Select up to 6 months for training", options=all_months, default=default_months)
-if len(selected_months) > 6:
-    st.error("Please select a maximum of 6 months.")
-    st.stop()
+#if len(selected_months) > 6:
+#    st.error("Please select a maximum of 6 months.")
+#    st.stop()
 
 possible_targets = [c for c in ["crime_type", "last_outcome_category"] if c in df.columns]
 if not possible_targets:
