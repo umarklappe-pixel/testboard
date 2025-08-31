@@ -13,6 +13,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
+from datetime import timedelta
 
 # -------------------------
 # Page config
@@ -148,56 +149,65 @@ if not possible_targets:
     st.warning("No suitable target column found (expected 'crime_type' or 'last_outcome_category').")
     st.stop()
 
-# Use first available target
 target_col = possible_targets[0]
-
-# Features: keep useful ones
 candidate_features = [c for c in df.columns if c not in [target_col, "month", "year_month"]]
 
-model_df = df.dropna(subset=[target_col]).copy()
+# Only last 6 months for training
+if "month" in df.columns and pd.api.types.is_datetime64_any_dtype(df["month"]):
+    max_date = df["month"].max()
+    six_months_ago = max_date - pd.DateOffset(months=6)
+    df_model = df[df["month"] >= six_months_ago].copy()
+else:
+    df_model = df.copy()
 
-# Build X, y
+st.info(f"Training model on last 6 months: {len(df_model):,} rows")
+
+model_df = df_model.dropna(subset=[target_col]).copy()
 X = model_df[candidate_features].copy()
 y = model_df[target_col].astype(str)
 
-# Split
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y if y.nunique() > 1 else None
-)
+@st.cache_resource(show_spinner=True)
+def train_model(X, y):
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y if y.nunique() > 1 else None
+    )
 
-# Preprocess with imputers
-cat_cols = [c for c in candidate_features if X[c].dtype == "object"]
-num_cols = [c for c in candidate_features if c not in cat_cols]
+    cat_cols = [c for c in X.columns if X[c].dtype == "object"]
+    num_cols = [c for c in X.columns if c not in cat_cols]
 
-preprocess = ColumnTransformer(
-    transformers=[
-        ("cat", Pipeline([
-            ("imputer", SimpleImputer(strategy="most_frequent")),
-            ("encoder", OneHotEncoder(handle_unknown="ignore"))
-        ]), cat_cols),
-        ("num", Pipeline([
-            ("imputer", SimpleImputer(strategy="median")),
-            ("scaler", StandardScaler(with_mean=False))
-        ]), num_cols)
-    ]
-)
+    preprocess = ColumnTransformer(
+        transformers=[
+            ("cat", Pipeline([
+                ("imputer", SimpleImputer(strategy="most_frequent")),
+                ("encoder", OneHotEncoder(handle_unknown="ignore"))
+            ]), cat_cols),
+            ("num", Pipeline([
+                ("imputer", SimpleImputer(strategy="median")),
+                ("scaler", StandardScaler(with_mean=False))
+            ]), num_cols)
+        ]
+    )
 
-clf = RandomForestClassifier(n_estimators=300, random_state=42, n_jobs=-1)
-pipe = Pipeline(steps=[("prep", preprocess), ("model", clf)])
-
-with st.spinner("Training Random Forest model..."):
+    clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+    pipe = Pipeline(steps=[("prep", preprocess), ("model", clf)])
     pipe.fit(X_train, y_train)
 
-y_pred = pipe.predict(X_test)
-labels = sorted(y.unique().tolist())
+    return pipe, X_test, y_test
 
-st.metric("Accuracy", f"{accuracy_score(y_test, y_pred):.3f}")
-st.metric("Macro F1", f"{f1_score(y_test, y_pred, average='macro'):.3f}")
+# Train only when user clicks
+if st.button("🚀 Train Model"):
+    pipe, X_test, y_test = train_model(X, y)
+    y_pred = pipe.predict(X_test)
+    labels = sorted(y.unique().tolist())
 
-st.subheader("Confusion Matrix")
-cm_df = make_confusion_df(y_test, y_pred, labels)
-cm_chart = px.imshow(cm_df.values, x=labels, y=labels, labels=dict(x="Predicted", y="True", color="Count"))
-st.plotly_chart(cm_chart, use_container_width=True)
+    st.metric("Accuracy", f"{accuracy_score(y_test, y_pred):.3f}")
+    st.metric("Macro F1", f"{f1_score(y_test, y_pred, average='macro'):.3f}")
 
-with st.expander("📄 Classification Report", expanded=False):
-    st.text(classification_report(y_test, y_pred, zero_division=0))
+    st.subheader("Confusion Matrix")
+    cm_df = make_confusion_df(y_test, y_pred, labels)
+    cm_chart = px.imshow(cm_df.values, x=labels, y=labels,
+                         labels=dict(x="Predicted", y="True", color="Count"))
+    st.plotly_chart(cm_chart, use_container_width=True)
+
+    with st.expander("📄 Classification Report", expanded=False):
+        st.text(classification_report(y_test, y_pred, zero_division=0))
