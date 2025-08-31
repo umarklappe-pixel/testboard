@@ -70,33 +70,6 @@ def pick_top_categories(series: pd.Series, top_n: int = 30) -> pd.Series:
 def make_confusion_df(y_true, y_pred, labels) -> pd.DataFrame:
     cm = confusion_matrix(y_true, y_pred, labels=labels)
     return pd.DataFrame(cm, index=pd.Index(labels, name="True"), columns=pd.Index(labels, name="Pred"))
-# -------------------------
-# Dataset Stats
-# -------------------------
-st.subheader("Data Stats")
-
-# Total crimes = total rows
-total_crimes = len(df)
-
-# Total months (if available)
-total_months = df["year_month"].nunique() if "year_month" in df.columns else "N/A"
-
-# Drop 'context' column from missing check if it exists
-df_check = df.drop(columns=["context"], errors="ignore")
-
-# Find rows with NaN or empty values (excluding 'context')
-incomplete_rows = df_check[
-    df_check.isna().any(axis=1) | (df_check.astype(str).apply(lambda x: x.str.strip() == "").any(axis=1))
-]
-
-incomplete_count = len(incomplete_rows)
-
-# Show summary stats
-col1, col2, col3 = st.columns(3)
-col1.metric("Total Crimes", f"{total_crimes:,}")
-col2.metric("Total Months", f"{total_months}")
-col3.metric("Incomplete Rows", f"{incomplete_count:,}")
-
 
 
 
@@ -121,6 +94,33 @@ else:
     st.stop()
 
 st.success(f"Loaded {len(df):,} rows • {df.shape[1]} columns")
+
+# -------------------------
+# Dataset Stats
+# -------------------------
+
+# Total crimes = total rows
+total_crimes = len(df)
+
+# Total months (if available)
+total_months = df["year_month"].nunique() if "year_month" in df.columns else "N/A"
+
+# Drop 'context' column from missing check if it exists
+df_check = df.drop(columns=["context"], errors="ignore")
+
+# Find rows with NaN or empty values (excluding 'context')
+incomplete_rows = df_check[
+    df_check.isna().any(axis=1) | (df_check.astype(str).apply(lambda x: x.str.strip() == "").any(axis=1))
+]
+
+incomplete_count = len(incomplete_rows)
+
+# Show summary stats
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Crimes", f"{total_crimes:,}")
+col2.metric("Total Months", f"{total_months}")
+col3.metric("Incomplete Rows", f"{incomplete_count:,}")
+
 
 # -------------------------
 # EDA (always full data)
