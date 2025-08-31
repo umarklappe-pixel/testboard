@@ -12,6 +12,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
 
 # -------------------------
 # Page config
@@ -160,16 +161,24 @@ X = model_df[candidate_features].copy()
 y = model_df[target_col].astype(str)
 
 # Split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y if y.nunique() > 1 else None)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y if y.nunique() > 1 else None
+)
 
-# Preprocess
+# Preprocess with imputers
 cat_cols = [c for c in candidate_features if X[c].dtype == "object"]
 num_cols = [c for c in candidate_features if c not in cat_cols]
 
 preprocess = ColumnTransformer(
     transformers=[
-        ("cat", OneHotEncoder(handle_unknown="ignore"), cat_cols),
-        ("num", StandardScaler(with_mean=False), num_cols)
+        ("cat", Pipeline([
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            ("encoder", OneHotEncoder(handle_unknown="ignore"))
+        ]), cat_cols),
+        ("num", Pipeline([
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler(with_mean=False))
+        ]), num_cols)
     ]
 )
 
