@@ -111,17 +111,17 @@ with colB:
     if {"year_month", "crime_type"}.issubset(df.columns):
         st.subheader("Heatmap — Top 10 Crime Types by Month")
 
-        # Ensure datetime
+        # make sure year_month is datetime
         df["year_month"] = pd.to_datetime(df["year_month"], errors="coerce")
 
-        # Aggregate counts
+        # aggregate
         crime_month = df.groupby(["crime_type", "year_month"]).size().reset_index(name="count")
 
-        # Restrict to top 10 crime types overall
-        top10_types = df["crime_type"].value_counts().head(10).index
-        crime_month = crime_month[crime_month["crime_type"].isin(top10_types)]
+        # keep only top 10 crimes overall
+        top10 = df["crime_type"].value_counts().head(10).index
+        crime_month = crime_month[crime_month["crime_type"].isin(top10)]
 
-        # Heatmap (month on x, crime type on y)
+        # build heatmap
         heatmap = alt.Chart(crime_month).mark_rect().encode(
             x=alt.X("year_month:T", title="Month", sort="x"),
             y=alt.Y("crime_type:N", title="Crime Type"),
