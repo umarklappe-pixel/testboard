@@ -258,7 +258,7 @@ if not possible_targets:
 
 target_col = st.selectbox("Choose target to predict", options=possible_targets, index=0)
 
-candidate_features = [c for c in ["lsoa_name", "location", "reported_by", "falls_within", "year_month"] if c in df.columns and c != target_col]
+candidate_features = [c for c in ["lsoa_name", "location", "year_month"] if c in df.columns and c != target_col]
 if {"latitude", "longitude"}.issubset(df.columns):
     candidate_features += ["latitude", "longitude"]
 
