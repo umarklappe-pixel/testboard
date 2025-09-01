@@ -245,7 +245,7 @@ if "year_month" not in df.columns:
 all_months = sorted(df["year_month"].unique())
 default_months = sorted(all_months)[-6:]
 
-selected_months = st.multiselect("Select up to 6 months for training", options=all_months, default=default_months)
+selected_months = st.multiselect("Select up to 18 months for training", options=all_months, default=default_months)
 if len(selected_months) > 18:
     st.error("Please select a maximum of 18 months.")
     st.stop()
@@ -307,6 +307,4 @@ if st.button("Start Training"):
     mcol2.metric("Macro F1", f"{f1m:.3f}")
     mcol3.metric("Classes", f"{len(labels)}")
 
- 
-    with st.expander("Classification Report", expanded=False):
-        st.text(classification_report(y_test, y_pred, zero_division=0))
+
