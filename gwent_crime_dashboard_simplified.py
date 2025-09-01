@@ -317,10 +317,4 @@ if st.button("Start Training"):
     mcol2.metric("Macro F1", f"{f1m:.3f}")
     mcol3.metric("Classes", f"{len(labels)}")
 
-    st.subheader("Confusion Matrix")
-    cm_df = make_confusion_df(y_test, y_pred, labels)
-    cm_chart = px.imshow(cm_df.values, x=labels, y=labels, labels=dict(x="Predicted", y="True", color="Count"))
-    st.plotly_chart(cm_chart, use_container_width=True)
 
-    with st.expander("Classification Report", expanded=False):
-        st.text(classification_report(y_test, y_pred, zero_division=0))
