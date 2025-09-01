@@ -258,12 +258,10 @@ if not possible_targets:
 
 target_col = st.selectbox("Choose target to predict", options=possible_targets, index=0)
 
-candidate_features = [c for c in ["lsoa_name", "location", "year_month", "latitude", "longitude"] if c in df.columns]
-
-selected_features = candidate_features
+selected_features = [c for c in ["lsoa_name", "location", "year_month", "latitude", "longitude"] if c in df.columns]
 
 # Button to start training
-if st.button("Start Training"):
+if st.button("Start Training with Random Forest"):
     model_df = df[df["year_month"].isin(selected_months)].dropna(subset=[target_col]).copy()
 
     # Handle missing values in features
