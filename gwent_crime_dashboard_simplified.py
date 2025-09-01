@@ -289,8 +289,6 @@ if st.button("Start Training with Random Forest"):
 # Forecasting Section (6 months history + 6 months forecast)
 # -------------------------
 
-st.header("Forecasting — 6 Months History + 6 Months Prediction")
-
 if "year_month" in df.columns and "crime_type" in df.columns:
     if st.button("Run Forecasting Model"):
         # Aggregate monthly counts
