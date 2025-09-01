@@ -246,7 +246,7 @@ all_months = sorted(df["year_month"].unique())
 default_months = sorted(all_months)[-6:]
 
 selected_months = st.multiselect("Select up to 18 months for training", options=all_months, default=default_months)
-if len(selected_months) > 18:
+if len(selected_months) > 48:
     st.error("Please select a maximum of 18 months.")
     st.stop()
 
